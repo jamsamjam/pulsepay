@@ -6,6 +6,7 @@ import MetricsStrip from '@/components/MetricsStrip'
 import ProviderHealthGrid from '@/components/ProviderHealthGrid'
 import LatencyChart from '@/components/LatencyChart'
 import FailureInjector from '@/components/FailureInjector'
+import TestPaymentPanel from '@/components/TestPaymentPanel'
 
 export interface Transaction {
   transactionId: string
@@ -142,6 +143,7 @@ export default function Dashboard() {
           <TransactionFeed transactions={transactions} />
         </div>
         <div className="flex flex-col gap-4">
+          <TestPaymentPanel />
           <ProviderHealthGrid health={providerHealth} />
           <FailureInjector />
         </div>
