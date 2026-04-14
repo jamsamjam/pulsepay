@@ -1,0 +1,22 @@
+{
+  "name": "provider-mock",
+  "version": "1.0.0",
+  "description": "Mock payment providers (Stripe, Adyen, Braintree) for PulsePay",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/cors": "^9.0.1",
+    "uuid": "^9.0.0",
+    "pino": "^8.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
