@@ -27,7 +27,7 @@ const SCENARIOS = [
     label: 'Fraud Block',
     description: 'Large amount + geo combo — expect BLOCKED',
     color: 'red',
-    payload: { amount: 9999.99, currency: 'USD', merchantId: 'merchant_demo', cardLast4: '4242', cardCountry: 'KP' },
+    payload: { amount: 9999.99, currency: 'USD', merchantId: 'merchant_demo', cardLast4: '4242', cardCountry: 'JP' },
   },
 ]
 
