@@ -153,6 +153,7 @@ public class SagaOrchestrator {
         // ---- Step 4: ROUTE ----
         JsonNode routeResult = null;
         boolean routeSuccess = false;
+        long providerLatencyMs = 0;
         try {
             routeResult = callProviderRouter(txn);
             routeSuccess = routeResult.path("success").asBoolean(false);
@@ -160,6 +161,7 @@ public class SagaOrchestrator {
             if (routeSuccess) {
                 String provider = routeResult.path("provider").asText();
                 String providerTxnId = routeResult.path("providerTxnId").asText();
+                providerLatencyMs = routeResult.path("latencyMs").asLong(0);
                 txn.setProvider(provider);
                 txn.setProviderTxnId(providerTxnId);
                 txn.setStatus(Transaction.TransactionStatus.ROUTED);
