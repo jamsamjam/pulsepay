@@ -185,8 +185,8 @@ services:
       ORCHESTRATOR_URL: http://payment-orchestrator:8080
       REDIS_URL: redis://redis:6379
       API_KEY: dev-api-key-12345
-      RATE_LIMIT_MAX_TOKENS: 100
-      RATE_LIMIT_REFILL_RATE: 100
+      RATE_LIMIT_MAX_TOKENS: 3000
+      RATE_LIMIT_REFILL_RATE: 3000
     ports:
       - "3000:3000"
     depends_on:

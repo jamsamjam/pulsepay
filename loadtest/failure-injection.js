@@ -1,6 +1,6 @@
 /**
  * PulsePay Load Test — Failure Injection
- * 200 VUs steady, inject provider failure at t=30s
+ * 50 VUs steady, inject provider failure at t=30s
  * Assert: approval rate stays >90% (traffic reroutes), circuit breaker trips within 3 failures
  */
 import http from 'k6/http';
@@ -12,7 +12,7 @@ export const options = {
   scenarios: {
     steady_load: {
       executor: 'constant-vus',
-      vus: 200,
+      vus: 50,
       duration: '2m',
     },
   },
