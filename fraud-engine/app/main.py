@@ -4,8 +4,10 @@ import logging
 from contextlib import asynccontextmanager
 
 import redis.asyncio as aioredis
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
@@ -45,6 +47,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="PulsePay Fraud Engine", version="1.0.0", lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    body = await request.body()
+    logger.error("422 validation error — body: %s — errors: %s", body.decode(errors="replace"), exc.errors())
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
 
 app.add_middleware(
     CORSMiddleware,
