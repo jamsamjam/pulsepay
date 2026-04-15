@@ -75,8 +75,20 @@ public class RoutingService {
                 selected.getAvgLatencyMs(), skipped);
         log.info("Routing txn={} → {}", req.getTransactionId(), reason);
 
-        // Call provider
-        ProviderClient.ProviderResult result = providerClient.charge(selected.getName(), req);
+        // Call provider — always invoke circuit breaker callback so halfOpenProbeInFlight is never stuck
+        ProviderClient.ProviderResult result;
+        try {
+            result = providerClient.charge(selected.getName(), req);
+        } catch (Exception e) {
+            log.error("Unexpected error charging provider {}: {}", selected.getName(), e.getMessage());
+            circuitBreaker.onFailure(selected, 0);
+            return RouteResponse.builder()
+                    .success(false)
+                    .provider(selected.getName())
+                    .errorMessage("PROVIDER_ERROR")
+                    .latencyMs(0)
+                    .build();
+        }
 
         if (result.success()) {
             circuitBreaker.onSuccess(selected, result.latencyMs());
