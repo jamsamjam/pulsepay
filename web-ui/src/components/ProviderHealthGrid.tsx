@@ -1,25 +1,37 @@
 'use client'
 
 import type { ProviderHealth } from '@/app/page'
-import { clsx } from 'clsx'
 
-interface Props { health: ProviderHealth }
+interface Props {
+  health: ProviderHealth
+}
 
 function CircuitBadge({ state }: { state: string }) {
-  const cls = clsx('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold', {
-    'bg-green-900 text-green-300': state === 'CLOSED',
-    'bg-red-900 text-red-300': state === 'OPEN',
-    'bg-yellow-900 text-yellow-300': state === 'HALF_OPEN',
-  })
-  const dot = clsx('w-1.5 h-1.5 rounded-full', {
-    'bg-green-400': state === 'CLOSED',
-    'bg-red-400': state === 'OPEN',
-    'bg-yellow-400': state === 'HALF_OPEN',
-  })
+  let color = 'var(--text-2)'
+  let bg = 'rgba(79, 159, 120, 0.10)'
+
+  if (state === 'CLOSED') {
+    color = 'var(--ok)'
+    bg = 'var(--ok-bg)'
+  } else if (state === 'OPEN') {
+    color = 'var(--err)'
+    bg = 'var(--err-bg)'
+  } else if (state === 'HALF_OPEN') {
+    color = 'var(--warn)'
+    bg = 'var(--warn-bg)'
+  }
+
+  const label = state === 'CLOSED' ? 'Healthy' : state === 'HALF_OPEN' ? 'Half-open' : 'Open'
+
   return (
-    <span className={cls}>
-      <span className={dot} />
-      {state}
+    <span
+      className="pill mono"
+      style={{
+        background: bg,
+        color,
+      }}
+    >
+      {label}
     </span>
   )
 }
@@ -28,30 +40,36 @@ const PROVIDERS = ['stripe', 'adyen', 'braintree']
 
 export default function ProviderHealthGrid({ health }: Props) {
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700">
-      <div className="px-4 py-3 border-b border-slate-700">
-        <h2 className="text-sm font-semibold text-slate-200">Provider Health</h2>
+    <div className="panel-card">
+      <div className="panel-header">
+        <div>
+          <p className="panel-title">Provider health</p>
+          <p className="panel-subtitle">Circuit state and request quality by provider</p>
+        </div>
       </div>
-      <div className="p-3 flex flex-col gap-2">
+
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {PROVIDERS.map(name => {
           const p = health[name]
           return (
-            <div key={name} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600/50">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold capitalize text-slate-200">{name}</span>
+            <div key={name} className="control-card" style={{ padding: '10px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="control-title" style={{ textTransform: 'capitalize', flex: '0 0 64px' }}>
+                  {name}
+                </span>
                 <CircuitBadge state={p?.circuitState ?? 'CLOSED'} />
-              </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
-                <span>Success rate</span>
-                <span className={`font-mono ${(p?.successRate ?? 1) > 0.95 ? 'text-green-400' : 'text-yellow-400'}`}>
+                <span style={{ flex: 1 }} />
+                <span className="mono" style={{ fontSize: '11px', color: (p?.successRate ?? 1) > 0.95 ? 'var(--ok)' : 'var(--warn)', fontWeight: 600 }}>
                   {p ? `${(p.successRate * 100).toFixed(1)}%` : '—'}
                 </span>
-                <span>Avg latency</span>
-                <span className="font-mono text-slate-300">
+                <span style={{ color: 'var(--border-strong)', fontSize: '10px' }}>·</span>
+                <span className="mono" style={{ fontSize: '11px', color: 'var(--text-2)', fontWeight: 600 }}>
                   {p ? `${Math.round(p.avgLatencyMs)}ms` : '—'}
                 </span>
-                <span>Requests</span>
-                <span className="font-mono text-slate-300">{p?.totalRequests ?? 0}</span>
+                <span style={{ color: 'var(--border-strong)', fontSize: '10px' }}>·</span>
+                <span className="mono" style={{ fontSize: '11px', color: 'var(--text-3)' }}>
+                  {p?.totalRequests ?? 0} req
+                </span>
               </div>
             </div>
           )

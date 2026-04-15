@@ -2,11 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import TransactionFeed from '@/components/TransactionFeed'
-import MetricsStrip from '@/components/MetricsStrip'
 import ProviderHealthGrid from '@/components/ProviderHealthGrid'
 import LatencyChart from '@/components/LatencyChart'
 import FailureInjector from '@/components/FailureInjector'
 import TestPaymentPanel from '@/components/TestPaymentPanel'
+import PayCard from '@/components/PayCard'
+
+type RightTab = 'test' | 'providers'
+
+const RIGHT_TABS: { id: RightTab; label: string }[] = [
+  { id: 'test', label: 'Simulation' },
+  { id: 'providers', label: 'Provider' },
+]
 
 export interface Transaction {
   transactionId: string
@@ -44,25 +51,88 @@ export interface ProviderHealth {
   }
 }
 
-// API calls go through Next.js rewrite proxy (same origin)
-// SSE connects directly to the gateway to avoid Next.js buffering the stream
 const API_BASE = ''
-const SSE_URL = typeof window !== 'undefined'
-  ? `http://${window.location.hostname}:3000/stream/transactions`
-  : '/stream/transactions'
+const SSE_URL =
+  typeof window !== 'undefined'
+    ? `http://${window.location.hostname}:3000/stream/transactions`
+    : '/stream/transactions'
+
+
+function TopSummary({
+  metrics,
+  connected,
+}: {
+  metrics: Metrics
+  connected: boolean
+}) {
+  const routedVolume = Object.values(metrics.revenueByProvider ?? {}).reduce(
+    (sum, value) => sum + value,
+    0
+  )
+
+  return (
+    <div className="hero-shell">
+      <div className="hero-copy">
+        <div className="eyebrow-row">
+          <span className={`dot${connected ? ' dot-live' : ''}`} style={{ background: connected ? '#0fd90f' : '#d9310f' }} />
+          <span>{connected ? 'Realtime monitor active' : 'Reconnecting stream'}</span>
+        </div>
+
+        <h1 className="hero-title">PulsePay</h1>
+
+        <div className="hero-metrics">
+          <div className="hero-metric-card">
+            <span className="metric-label">Net volume</span>
+            <span className="metric-value">${Math.round(routedVolume).toLocaleString()}</span>
+          </div>
+          <div className="hero-metric-card">
+            <span className="metric-label">Approval rate</span>
+            <span className="metric-value" style={{ color: metrics.approvalRate > 95 ? 'var(--ok)' : metrics.approvalRate > 85 ? 'var(--warn)' : 'var(--err)' }}>
+              {metrics.approvalRate.toFixed(1)}%
+            </span>
+          </div>
+          <div className="hero-metric-card">
+            <span className="metric-label">Fraud flag rate</span>
+            <span className="metric-value" style={{ color: metrics.fraudFlagRate < 5 ? 'var(--ok)' : metrics.fraudFlagRate < 15 ? 'var(--warn)' : 'var(--err)' }}>
+              {metrics.fraudFlagRate.toFixed(1)}%
+            </span>
+          </div>
+          <div className="hero-metric-card">
+            <span className="metric-label">P95 latency</span>
+            <span className="metric-value" style={{ color: metrics.p95 < 200 ? 'var(--ok)' : metrics.p95 < 500 ? 'var(--warn)' : 'var(--err)' }}>
+              {metrics.p95}ms
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="hero-aside">
+        <PayCard />
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [metrics, setMetrics] = useState<Metrics>({
-    tps: 0, approvalRate: 100, fraudFlagRate: 0,
-    p50: 0, p95: 0, p99: 0, revenueByProvider: {}, totalTransactions: 0,
+    tps: 0,
+    approvalRate: 100,
+    fraudFlagRate: 0,
+    p50: 0,
+    p95: 0,
+    p99: 0,
+    revenueByProvider: {},
+    totalTransactions: 0,
   })
   const [providerHealth, setProviderHealth] = useState<ProviderHealth>({})
-  const [latencyHistory, setLatencyHistory] = useState<{ ts: string; p50: number; p95: number; p99: number }[]>([])
+  const [latencyHistory, setLatencyHistory] = useState<
+    { ts: string; p50: number; p95: number; p99: number }[]
+  >([])
   const [connected, setConnected] = useState(false)
+  const [rightTab, setRightTab] = useState<RightTab>('test')
   const sseRef = useRef<EventSource | null>(null)
 
-  // SSE connection for live events + metrics snapshots
   useEffect(() => {
     let es: EventSource
 
@@ -71,12 +141,13 @@ export default function Dashboard() {
       sseRef.current = es
 
       es.onopen = () => setConnected(true)
+
       es.onerror = () => {
         setConnected(false)
         setTimeout(connect, 3000)
       }
 
-      es.onmessage = (e) => {
+      es.onmessage = e => {
         try {
           const event = JSON.parse(e.data)
 
@@ -98,7 +169,11 @@ export default function Dashboard() {
             return
           }
 
-          if (['SETTLED', 'TRANSACTION_FAILED', 'ROUTED', 'FRAUD_SCORED', 'TRANSACTION_INITIATED'].includes(event.type)) {
+          if (
+            ['SETTLED', 'TRANSACTION_FAILED', 'ROUTED', 'FRAUD_SCORED', 'TRANSACTION_INITIATED'].includes(
+              event.type
+            )
+          ) {
             setTransactions(prev => [event, ...prev].slice(0, 100))
           }
         } catch {}
@@ -109,7 +184,6 @@ export default function Dashboard() {
     return () => es?.close()
   }, [])
 
-  // Poll provider health every 3s
   useEffect(() => {
     const fetchHealth = async () => {
       try {
@@ -119,44 +193,50 @@ export default function Dashboard() {
         if (res.ok) setProviderHealth(await res.json())
       } catch {}
     }
+
     fetchHealth()
     const id = setInterval(fetchHealth, 3000)
     return () => clearInterval(id)
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4">
-      {/* Header */}
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white tracking-tight">
-          <span className="text-neutral-400">Pulse</span>Pay
-          <span className="text-slate-400 text-sm ml-3 font-normal">Live Operations</span>
-        </h1>
-        <div className="flex items-center gap-2">
-          <span className={`inline-block w-2 h-2 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-          <span className="text-xs text-slate-400">{connected ? 'Live' : 'Reconnecting...'}</span>
-        </div>
-      </header>
+    <div className="dashboard-page-full">
+      <main className="content-shell">
+        <TopSummary metrics={metrics} connected={connected} />
 
-      {/* Metrics Strip */}
-      <MetricsStrip metrics={metrics} />
+        <div className="content-grid">
+          <div className="content-main">
+            <TransactionFeed transactions={transactions} />
+            <LatencyChart history={latencyHistory} />
+          </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <div className="lg:col-span-2">
-          <TransactionFeed transactions={transactions} />
-        </div>
-        <div className="flex flex-col gap-4">
-          <TestPaymentPanel />
-          <ProviderHealthGrid health={providerHealth} />
-          <FailureInjector />
-        </div>
-      </div>
+          <div className="content-side">
+            <div className="panel-card">
+              <div className="right-tab-bar">
+                {RIGHT_TABS.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setRightTab(t.id)}
+                    className={`right-tab-btn${rightTab === t.id ? ' active' : ''}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
 
-      {/* Latency Chart */}
-      <div className="mt-4">
-        <LatencyChart history={latencyHistory} />
-      </div>
+              <div className="right-tab-content">
+                {rightTab === 'test' && <TestPaymentPanel />}
+                {rightTab === 'providers' && (
+                  <>
+                    <ProviderHealthGrid health={providerHealth} />
+                    <FailureInjector />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

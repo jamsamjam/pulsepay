@@ -16,8 +16,16 @@ import { Line } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-interface DataPoint { ts: string; p50: number; p95: number; p99: number }
-interface Props { history: DataPoint[] }
+interface DataPoint {
+  ts: string
+  p50: number
+  p95: number
+  p99: number
+}
+
+interface Props {
+  history: DataPoint[]
+}
 
 export default function LatencyChart({ history }: Props) {
   const labels = history.map(h => new Date(h.ts).toLocaleTimeString())
@@ -28,28 +36,31 @@ export default function LatencyChart({ history }: Props) {
       {
         label: 'P50',
         data: history.map(h => h.p50),
-        borderColor: 'rgb(52, 211, 153)',
-        backgroundColor: 'rgba(52, 211, 153, 0.05)',
-        tension: 0.3,
-        pointRadius: 2,
+        borderColor: '#5da87d',
+        backgroundColor: 'rgba(93, 168, 125, 0.10)',
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2,
         fill: false,
       },
       {
         label: 'P95',
         data: history.map(h => h.p95),
-        borderColor: 'rgb(251, 191, 36)',
-        backgroundColor: 'rgba(251, 191, 36, 0.05)',
-        tension: 0.3,
-        pointRadius: 2,
+        borderColor: '#7cb9ad',
+        backgroundColor: 'rgba(124, 185, 173, 0.10)',
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2,
         fill: false,
       },
       {
         label: 'P99',
         data: history.map(h => h.p99),
-        borderColor: 'rgb(248, 113, 113)',
-        backgroundColor: 'rgba(248, 113, 113, 0.05)',
-        tension: 0.3,
-        pointRadius: 2,
+        borderColor: '#d59473',
+        backgroundColor: 'rgba(213, 148, 115, 0.10)',
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2,
         fill: false,
       },
     ],
@@ -58,38 +69,73 @@ export default function LatencyChart({ history }: Props) {
   const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
-    animation: { duration: 300 },
+    animation: { duration: 240 },
     scales: {
       x: {
-        grid: { color: 'rgba(100,116,139,0.2)' },
-        ticks: { color: '#94a3b8', font: { size: 10 } },
+        grid: { color: 'rgba(116, 148, 123, 0.10)' },
+        ticks: {
+          color: '#7e9988',
+          font: { size: 10, family: 'ui-monospace, monospace' },
+          maxTicksLimit: 8,
+        },
+        border: { color: 'rgba(116, 148, 123, 0.18)' },
       },
       y: {
-        grid: { color: 'rgba(100,116,139,0.2)' },
+        grid: { color: 'rgba(116, 148, 123, 0.10)' },
         ticks: {
-          color: '#94a3b8',
-          font: { size: 10 },
-          callback: (value) => `${value}ms`,
+          color: '#7e9988',
+          font: { size: 10, family: 'ui-monospace, monospace' },
+          callback: value => `${value}ms`,
         },
+        border: { color: 'rgba(116, 148, 123, 0.18)' },
         min: 0,
       },
     },
     plugins: {
       legend: {
-        labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 },
+        labels: {
+          color: '#507060',
+          font: { size: 11, family: 'Inter, sans-serif' },
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          padding: 18,
+        },
       },
       title: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(255,255,255,0.96)',
+        borderColor: 'rgba(116, 148, 123, 0.18)',
+        borderWidth: 1,
+        titleColor: '#163126',
+        bodyColor: '#507060',
+        titleFont: { size: 11 },
+        bodyFont: { size: 11, family: 'ui-monospace, monospace' },
+      },
     },
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700">
-      <div className="px-4 py-3 border-b border-slate-700">
-        <h2 className="text-sm font-semibold text-slate-200">Latency — 60s Rolling Window</h2>
+    <div className="panel-card">
+      <div className="panel-header">
+        <div>
+          <p className="panel-title">Latency trend</p>
+          <p className="panel-subtitle">Rolling 60 second performance window</p>
+        </div>
+        <span className="soft-chip">Streaming</span>
       </div>
-      <div className="p-4" style={{ height: 220 }}>
+
+      <div style={{ padding: '18px 20px', height: '280px' }}>
         {history.length < 2 ? (
-          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+          <div
+            style={{
+              height: '100%',
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--text-3)',
+              fontSize: '13px',
+            }}
+          >
             Collecting latency data...
           </div>
         ) : (
