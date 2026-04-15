@@ -18,17 +18,16 @@ const SCENARIOS = [
   },
   {
     label: 'Geo Anomaly',
-    description: 'US baseline → same card from RU',
+    description: 'US $99 baseline → FR $700 spike',
     tone: 'yellow',
-    // Seeds a US baseline first so geo travel fires; amount stays similar so
-    // only GEO_IMPOSSIBLE_TRAVEL (30 pts) triggers → FLAG (score > 50 needs
-    // a combined signal, so we bump amount enough for AMOUNT_ANOMALY to fire).
+    // Seeds a US baseline ($99.99) first, then fires from FR at $700 (~7× baseline).
+    // geo(+30) + amount_extreme(+55) = 85 → BLOCK (threshold > 80).
     payload: {
-      amount: 350.0,
+      amount: 700.0,
       currency: 'USD',
       merchantId: 'merchant_demo',
       cardLast4: '4243',
-      cardCountry: 'RU',
+      cardCountry: 'FR',
     },
     // baseline sent before the real payload
     baseline: {

@@ -14,7 +14,7 @@ def score_transaction(txn: TransactionRequest, history: UserHistory) -> FraudSco
     # ------------------------------------------------------------------
     recent_count = history.txn_count_last_10min
     if recent_count > 10:
-        score += 55
+        score += 85
         reasons.append("HIGH_VELOCITY")
     elif recent_count > 5:
         score += 15
