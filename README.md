@@ -1,6 +1,6 @@
 # PulsePay
 
-A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management[^1], circuit breaker failover, and a live operations dashboard.
+A payment orchestration platform: multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1], circuit breaker failover, and a live operations dashboard.
 
 <details>
 <summary>Dashboard Preview</summary>
@@ -172,7 +172,7 @@ Key tuning parameters (via environment variables):
 
 ## Future Works
 
-**Fraud threshold calibration**: In a real system the thresholds and signal weights would be derived from labelled transaction history using precision/recall analysis, trading off false positive rate (legitimate transactions blocked) against false negative rate (fraud let through).
+**Fraud threshold calibration**: In a real system the thresholds and signal weights would be derived from labelled transaction history using precision/recall analysis, trading off false positive rate (legitimate transactions blocked) against false negative rate (fraud let through). This can be further extended to a ML-based fraud scoring model.
 
 **Async fraud scoring**: fraud engine is called synchronously in the SAGA, blocking the orchestrator thread for 100–400ms per transaction. Moving to fire-and-forget with a short timeout and a fallback allow-with-flag policy would significantly increase throughput.
 
