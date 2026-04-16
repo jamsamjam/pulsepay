@@ -20,8 +20,7 @@ docker compose up --build
 # or docker-compose up --build
 ```
 
-<details>
-<summary>API Reference</summary>
+## API Reference
 
 ### Initiate Payment
 
@@ -58,8 +57,6 @@ Content-Type: application/json
 GET /api/v1/payments/:id
 X-Api-Key: dev-api-key-12345
 ```
-
-</details>
 
 ## Services
 
